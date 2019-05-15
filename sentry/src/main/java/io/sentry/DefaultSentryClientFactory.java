@@ -508,7 +508,7 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
     }
 
     /**
-     * Returns the list of package names to consider "in-app".
+     * Returns an immutable list of package names to consider "in-app".
      * <p>
      * Those packages will be used with the {@link StackTraceInterface} to show frames that are a part of
      * the main application in the Sentry UI by default.
@@ -535,7 +535,7 @@ public class DefaultSentryClientFactory extends SentryClientFactory {
             }
         }
 
-        return inAppPackages;
+        return Collections.unmodifiableList(inAppPackages);
     }
 
     /**

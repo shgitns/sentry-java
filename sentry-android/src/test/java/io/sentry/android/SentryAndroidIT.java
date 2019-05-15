@@ -1,12 +1,11 @@
 package io.sentry.android;
 
+import java.util.concurrent.Callable;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.robolectric.Robolectric;
 import org.robolectric.RobolectricTestRunner;
-
-import java.util.concurrent.Callable;
 
 @RunWith(RobolectricTestRunner.class)
 public class SentryAndroidIT extends AndroidTest {
@@ -30,5 +29,4 @@ public class SentryAndroidIT extends AndroidTest {
         verifyProject1PostRequestCount(1);
         verifyStoredEventCount(1);
     }
-
 }

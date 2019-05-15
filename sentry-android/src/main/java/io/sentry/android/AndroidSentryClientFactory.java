@@ -17,9 +17,8 @@ import io.sentry.context.SingletonContextManager;
 import io.sentry.dsn.Dsn;
 import io.sentry.util.Util;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
+import java.util.Collections;
 
 /**
  * SentryClientFactory that handles Android-specific construction, like taking advantage
@@ -50,13 +49,18 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
         this.ctx = ctx.getApplicationContext();
     }
 
+    /**
+     * Construct an AndroidSentryClientFactory using the base Context from the specified Android Application.
+     *
+     * @param app Android Application
+     */
     public AndroidSentryClientFactory(Application app) {
         Log.d(TAG, "Construction of Android Sentry from Android Application.");
 
         this.ctx = app.getBaseContext();
     }
 
-    public Context getApplicationContext() {
+    public Context getAndroidContext() {
         return ctx;
     }
 
@@ -67,7 +71,8 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
                 + " please add it to your AndroidManifest.xml");
         }
 
-        Log.d(TAG, "Sentry init with ctx='" + getApplicationContext().toString() + "'");
+        Context context = getAndroidContext();
+        Log.d(TAG, "Sentry init with ctx='" + context.toString() + "'");
 
         String protocol = dsn.getProtocol();
         if (protocol.equalsIgnoreCase("noop")) {
@@ -85,7 +90,7 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
         }
 
         SentryClient sentryClient = super.createSentryClient(dsn);
-        sentryClient.addBuilderHelper(new AndroidEventBuilderHelper(getApplicationContext()));
+        sentryClient.addBuilderHelper(new AndroidEventBuilderHelper(context));
 
         return sentryClient;
     }
@@ -95,18 +100,7 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
         Collection<String> inAppFrames = super.getInAppFrames(dsn);
 
         if (inAppFrames.isEmpty()) {
-            PackageInfo info = null;
-            try {
-                info = getApplicationContext().getPackageManager().getPackageInfo(getApplicationContext().getPackageName(), 0);
-            } catch (PackageManager.NameNotFoundException e) {
-                Log.e(TAG, "Error getting package information.", e);
-            }
-
-            if (info != null && !Util.isNullOrEmpty(info.packageName)) {
-                List<String> newPackages = new ArrayList<>(1);
-                newPackages.add(info.packageName);
-                return newPackages;
-            }
+            return getInAppFramesFromAndroidContext();
         }
 
         return inAppFrames;
@@ -119,7 +113,7 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
         if (bufferDirOpt != null) {
             bufferDir = new File(bufferDirOpt);
         } else {
-            bufferDir = new File(getApplicationContext().getCacheDir().getAbsolutePath(), DEFAULT_BUFFER_DIR);
+            bufferDir = new File(getAndroidContext().getCacheDir().getAbsolutePath(), DEFAULT_BUFFER_DIR);
         }
 
         Log.d(TAG, "Using buffer dir: " + bufferDir.getAbsolutePath());
@@ -131,6 +125,23 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
         return new SingletonContextManager();
     }
 
+    private Collection<String> getInAppFramesFromAndroidContext() {
+        Context context = getAndroidContext();
+        String packageName = context.getPackageName();
+        PackageManager packageManager = context.getPackageManager();
+
+        try {
+            PackageInfo info = packageManager.getPackageInfo(packageName, 0);
+
+            return info == null || Util.isNullOrEmpty(info.packageName)
+                ? Collections.<String>emptyList()
+                : Collections.singletonList(info.packageName);
+        } catch (PackageManager.NameNotFoundException e) {
+            Log.e(TAG, "Error getting package information.", e);
+            return Collections.emptyList();
+        }
+    }
+
     /**
      * Check whether the application has been granted a certain permission.
      *
@@ -139,7 +150,7 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
      * @return true if permissions is granted
      */
     private boolean checkPermission(String permission) {
-        int res = getApplicationContext().checkCallingOrSelfPermission(permission);
+        int res = getAndroidContext().checkCallingOrSelfPermission(permission);
         return (res == PackageManager.PERMISSION_GRANTED);
     }
 }

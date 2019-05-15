@@ -2,6 +2,7 @@ package io.sentry.android;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.Context;
 import android.os.Bundle;
 import io.sentry.Sentry;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -21,6 +22,11 @@ public class SentryITActivity extends Activity {
             super(app.getApplicationContext());
             customFactoryUsed.set(true);
         }
+
+        CustomAndroidSentryClientFactory(Context ctx) {
+            super(ctx);
+            customFactoryUsed.set(true);
+        }
     }
 
     @Override
@@ -28,7 +34,7 @@ public class SentryITActivity extends Activity {
         super.onCreate(savedInstanceState);
         Sentry.init(
             "http://8292bf61d620417282e68a72ae03154a:e3908e05ad874b24b7a168992bfa3577@localhost:8080/1",
-            new CustomAndroidSentryClientFactory(getApplication()));
+            new CustomAndroidSentryClientFactory(getBaseContext()));
     }
 
     public void sendEvent() {
