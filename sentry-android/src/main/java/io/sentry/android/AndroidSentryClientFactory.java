@@ -39,17 +39,6 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
     private Context ctx;
 
     /**
-     * Construct an AndroidSentryClientFactory using the specified Android Context.
-     *
-     * @param ctx Android Context.
-     */
-    public AndroidSentryClientFactory(Context ctx) {
-        Log.d(TAG, "Construction of Android Sentry from Android Context.");
-
-        this.ctx = ctx.getApplicationContext();
-    }
-
-    /**
      * Construct an AndroidSentryClientFactory using the base Context from the specified Android Application.
      *
      * @param app Android Application
@@ -58,6 +47,17 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
         Log.d(TAG, "Construction of Android Sentry from Android Application.");
 
         this.ctx = app.getBaseContext();
+    }
+
+    /**
+     * Construct an AndroidSentryClientFactory using the specified Android Context.
+     *
+     * @param ctx Android Context.
+     */
+    public AndroidSentryClientFactory(Context ctx) {
+        Log.d(TAG, "Construction of Android Sentry from Android Context.");
+
+        this.ctx = ctx;
     }
 
     public Context getAndroidContext() {
