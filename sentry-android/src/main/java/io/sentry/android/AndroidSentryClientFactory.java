@@ -17,6 +17,7 @@ import io.sentry.context.SingletonContextManager;
 import io.sentry.dsn.Dsn;
 import io.sentry.util.Util;
 import java.io.File;
+import java.lang.ref.WeakReference;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -36,7 +37,7 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
      */
     private static final String DEFAULT_BUFFER_DIR = "sentry-buffered-events";
 
-    private Context ctx;
+    private WeakReference<Context> ctx;
 
     /**
      * Construct an AndroidSentryClientFactory using the base Context from the specified Android Application.
@@ -46,7 +47,7 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
     public AndroidSentryClientFactory(Application app) {
         Log.d(TAG, "Construction of Android Sentry from Android Application.");
 
-        this.ctx = app.getBaseContext();
+        this.ctx = new WeakReference<>(app.getBaseContext());
     }
 
     /**
@@ -57,11 +58,18 @@ public class AndroidSentryClientFactory extends DefaultSentryClientFactory {
     public AndroidSentryClientFactory(Context ctx) {
         Log.d(TAG, "Construction of Android Sentry from Android Context.");
 
-        this.ctx = ctx;
+        this.ctx = new WeakReference<>(ctx);
     }
 
-    public Context getAndroidContext() {
-        return ctx;
+    private Context getAndroidContext() {
+        Context context = ctx.get();
+        if (context == null) {
+            throw new IllegalStateException("Application context no longer available!" +
+                "Ensure that you supply the root context of your application via Application.getBaseContext()" +
+                "or the Application class itself to this class constructor.");
+        }
+
+        return context;
     }
 
     @Override
